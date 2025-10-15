@@ -6,7 +6,13 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:web": "npx expo export:web web-build",
+    "deploy": "gh-pages -d dist",
+    "clean": "rimraf node_modules .expo && echo cleaned",
+    "git:commit": "node ./scripts/git-push.js",
+    "publish:dist": "node ./scripts/publish-dist.js",
+    "deploy:all": "npm run git:commit && npx expo export --platform web --output-dir dist && npm run publish:dist"
   },
   "dependencies": {
     "expo": "~54.0.13",
@@ -17,9 +23,14 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-web": "^0.21.1"
   },
+  "bin": {
+    "publish-dist": "node ./scripts/publish-dist.js"
+  },
   "devDependencies": {
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^54.0.4",
+    "gh-pages": "^4.0.0",
+    "rimraf": "^5.0.10",
     "typescript": "~5.9.2"
   },
   "private": true

@@ -18,11 +18,20 @@ if (!fs.existsSync(distPath)) {
 try {
   execSync('git init -b gh-pages', { cwd: distPath, stdio: 'inherit' });
   execSync('git add -A', { cwd: distPath, stdio: 'inherit' });
-  execSync('git commit -m "Publish dist" || true', { cwd: distPath, stdio: 'inherit' });
-  execSync(`git remote add origin ${repo}`, { cwd: distPath, stdio: 'inherit' });
+  try {
+    execSync('git commit -m "Publish dist"', { cwd: distPath, stdio: 'inherit' });
+  } catch (e) {
+    // commit may fail if there are no changes; ignore
+  }
+  try {
+    execSync(`git remote add origin ${repo}`, { cwd: distPath, stdio: 'inherit' });
+  } catch (e) {
+    // remote may already exist; ignore
+  }
   execSync('git push -f origin gh-pages', { cwd: distPath, stdio: 'inherit' });
-  // remove the temporary git metadata
-  execSync('rm -rf .git', { cwd: distPath, stdio: 'inherit' });
+  // remove the temporary git metadata in a cross-platform way
+  const rimraf = require('rimraf');
+  rimraf.sync(path.join(distPath, '.git'));
   console.log('Published dist to gh-pages');
 } catch (err) {
   console.error('Publish failed:', err.message || err);
