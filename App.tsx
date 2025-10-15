@@ -235,9 +235,9 @@ export default function App() {
     // lands exactly where the browser places the element. For native, continue using the
     // measured section offsets and ScrollView.scrollTo.
     if (section === 'contact') {
-      // Simple robust fallback: scroll to 95% down the content — this lands near the contact section
+  // Simple robust fallback: scroll to 93% down the content — this lands near the contact section
       if (contentHeight > 0 && scrollViewHeight > 0) {
-        const target = Math.round((contentHeight - scrollViewHeight) * 0.95);
+  const target = Math.round((contentHeight - scrollViewHeight) * 0.93);
         scrollViewRef.current?.scrollTo({ y: target, animated: true });
         return;
       }
