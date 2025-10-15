@@ -117,7 +117,6 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('hero');
   const [sectionOffsets, setSectionOffsets] = useState<{ [key: string]: number }>({});
   const NAVBAR_HEIGHT = 64; // approximate fixed navbar height used for offset correction on mobile
-  const [measuredNavbarHeight, setMeasuredNavbarHeight] = useState<number | null>(null);
   const [contentHeight, setContentHeight] = useState<number>(0);
   const [scrollViewHeight, setScrollViewHeight] = useState<number>(0);
   const [typedText, setTypedText] = useState('');
@@ -235,52 +234,16 @@ export default function App() {
     // For web, use the DOM element position and scroll the correct scroll parent so scrolling
     // lands exactly where the browser places the element. For native, continue using the
     // measured section offsets and ScrollView.scrollTo.
-    if (Platform.OS === 'web') {
-      try {
-        const sel = section === 'contact' ? '.section-contact' : `.section-${section}`;
-        const el = document.querySelector(sel) as HTMLElement | null;
-        if (el) {
-          // Find the nearest scrollable parent (robust across nested containers)
-          const findScrollParent = (node: Element | null): HTMLElement | null => {
-            if (!node) return document.scrollingElement as HTMLElement | null;
-            let parent = node.parentElement;
-            while (parent && parent !== document.body) {
-              try {
-                const style = window.getComputedStyle(parent);
-                const overflowY = style.overflowY;
-                if (overflowY === 'auto' || overflowY === 'scroll') return parent as HTMLElement;
-              } catch (err) {
-                // ignore
-              }
-              parent = parent.parentElement;
-            }
-            return (document.scrollingElement as HTMLElement) || document.body;
-          };
-
-          const scrollContainer = findScrollParent(el);
-          const elRect = el.getBoundingClientRect();
-          if (scrollContainer) {
-            const containerRect = scrollContainer.getBoundingClientRect();
-            const offsetInContainer = Math.round(elRect.top - containerRect.top + scrollContainer.scrollTop);
-            const navbarH = typeof measuredNavbarHeight === 'number' ? measuredNavbarHeight : NAVBAR_HEIGHT;
-            const desiredY = Math.max(0, offsetInContainer - navbarH);
-            // If the scrollContainer is the document scrolling element, use window.scrollTo
-            if (scrollContainer === document.scrollingElement || scrollContainer === document.body) {
-              window.scrollTo({ top: desiredY, behavior: 'smooth' });
-            } else {
-              scrollContainer.scrollTo({ top: desiredY, behavior: 'smooth' });
-            }
-          } else {
-            const pageY = Math.round(elRect.top + (window.scrollY || window.pageYOffset || 0));
-            const navbarH = typeof measuredNavbarHeight === 'number' ? measuredNavbarHeight : NAVBAR_HEIGHT;
-            const desiredY = Math.max(0, pageY - navbarH);
-            window.scrollTo({ top: desiredY, behavior: 'smooth' });
-          }
-          return;
-        }
-      } catch (err) {
-        // fallthrough to native behavior if DOM measurement fails
+    if (section === 'contact') {
+      // Simple robust fallback: scroll to 95% down the content — this lands near the contact section
+      if (contentHeight > 0 && scrollViewHeight > 0) {
+        const target = Math.round((contentHeight - scrollViewHeight) * 0.95);
+        scrollViewRef.current?.scrollTo({ y: target, animated: true });
+        return;
       }
+      // final fallback: just large scroll
+      scrollViewRef.current?.scrollTo({ y: 99999, animated: true });
+      return;
     }
 
     // Prefer measured offsets when available (better on mobile / dynamic content)
