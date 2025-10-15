@@ -236,15 +236,21 @@ export default function App() {
     // measured section offsets and ScrollView.scrollTo.
     if (Platform.OS === 'web') {
       try {
-        // The contact section has the class 'section-contact' (added earlier). For other
-        // sections you could add corresponding classes and reuse this logic.
+        // Prefer scrolling the ScrollView DOM element (app-scroll) when available.
+        const scrollContainer = document.querySelector('.app-scroll') as HTMLElement | null;
         const sel = section === 'contact' ? '.section-contact' : `.section-${section}`;
         const el = document.querySelector(sel) as HTMLElement | null;
         if (el) {
           const rect = el.getBoundingClientRect();
           const pageY = Math.round(rect.top + (window.scrollY || window.pageYOffset || 0));
           const desiredY = Math.max(0, pageY - NAVBAR_HEIGHT);
-          window.scrollTo({ top: desiredY, behavior: 'smooth' });
+          if (scrollContainer) {
+            // Scroll inside the scroll container
+            scrollContainer.scrollTo({ top: desiredY, behavior: 'smooth' });
+          } else {
+            // Fallback to window scrolling
+            window.scrollTo({ top: desiredY, behavior: 'smooth' });
+          }
           return;
         }
       } catch (err) {
@@ -531,6 +537,7 @@ export default function App() {
         scrollEventThrottle={16}
         onLayout={(e:any) => setScrollViewHeight(e.nativeEvent.layout.height)}
         onContentSizeChange={(w:any, h:any) => setContentHeight(h)}
+        {...(Platform.OS === 'web' ? { className: 'app-scroll' } : {})}
       >
   {/* Hero Section */}
   <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsetIfChanged('hero', y); }}>
