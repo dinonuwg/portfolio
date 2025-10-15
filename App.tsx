@@ -669,7 +669,34 @@ export default function App() {
         </View>
 
   {/* Contact Section */}
-  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsetIfChanged('contact', y); }}>
+  <View
+    style={styles.section}
+    {...(Platform.OS === 'web' ? { className: 'section-contact' } : {})}
+    onLayout={(e: any) => {
+      if (Platform.OS === 'web') {
+        // On web, prefer measuring the DOM element to get the absolute Y position
+        // (layout.y can be unreliable due to scrolling/layout differences).
+        // Defer measurement a tick so layout settles.
+        setTimeout(() => {
+          try {
+            const el = document.querySelector('.section-contact') as HTMLElement | null;
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              const y = Math.round(rect.top + (window.scrollY || window.pageYOffset || 0));
+              setSectionOffsetIfChanged('contact', y);
+            }
+          } catch (err) {
+            // fallback to native measurement if DOM measurement fails
+            const y = e?.nativeEvent?.layout?.y ?? 0;
+            setSectionOffsetIfChanged('contact', y);
+          }
+        }, 40);
+      } else {
+        const y = e.nativeEvent.layout.y;
+        setSectionOffsetIfChanged('contact', y);
+      }
+    }}
+  >
           <Animated.View style={[styles.sectionContainer, { 
             opacity: contactAnim, 
             transform: [{ scale: contactAnim }] 
