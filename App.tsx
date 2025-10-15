@@ -19,6 +19,8 @@ const Hoverable: React.FC<any> = ({ children, style, onPress, hoverStyle, pressS
   const handleHoverIn = () => {
     setIsHovered(true);
     if (Platform.OS === 'web' || Platform.OS === 'ios' || Platform.OS === 'android') {
+      // stop any current animation and then animate to hover position
+      hoverAnim.stopAnimation?.();
       Animated.timing(hoverAnim, { toValue: -6, duration: 100, useNativeDriver: !isWeb }).start();
     }
   };
@@ -26,12 +28,29 @@ const Hoverable: React.FC<any> = ({ children, style, onPress, hoverStyle, pressS
   const handleHoverOut = () => {
     setIsHovered(false);
     if (Platform.OS === 'web' || Platform.OS === 'ios' || Platform.OS === 'android') {
+      // stop current animation and return to neutral position
+      hoverAnim.stopAnimation?.();
       Animated.timing(hoverAnim, { toValue: 0, duration: 100, useNativeDriver: !isWeb }).start();
     }
   };
 
   const handlePressIn = () => setIsPressed(true);
   const handlePressOut = () => setIsPressed(false);
+
+  // On press, also apply hover animation so mobile devices visually lift buttons
+  const handlePressInVisual = () => {
+    setIsPressed(true);
+    // mimic hover-in visual
+    hoverAnim.stopAnimation?.();
+    Animated.timing(hoverAnim, { toValue: -6, duration: 100, useNativeDriver: !isWeb }).start();
+  };
+
+  const handlePressOutVisual = () => {
+    setIsPressed(false);
+    // return to neutral visual
+    hoverAnim.stopAnimation?.();
+    Animated.timing(hoverAnim, { toValue: 0, duration: 120, useNativeDriver: !isWeb }).start();
+  };
 
   const animatedStyle: any = {
     transform: [{ translateY: hoverAnim }],
@@ -44,8 +63,8 @@ const Hoverable: React.FC<any> = ({ children, style, onPress, hoverStyle, pressS
   return (
     <AnimatedPressable
       onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      onPressIn={handlePressInVisual}
+      onPressOut={handlePressOutVisual}
       onMouseEnter={handleHoverIn}
       onMouseLeave={handleHoverOut}
       {...props}
@@ -98,6 +117,8 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('hero');
   const [sectionOffsets, setSectionOffsets] = useState<{ [key: string]: number }>({});
   const NAVBAR_HEIGHT = 64; // approximate fixed navbar height used for offset correction on mobile
+  const [contentHeight, setContentHeight] = useState<number>(0);
+  const [scrollViewHeight, setScrollViewHeight] = useState<number>(0);
   const [typedText, setTypedText] = useState('');
   const [projects, setProjects] = useState<any[]>([]);
   const [notification, setNotification] = useState('');
@@ -218,13 +239,28 @@ export default function App() {
       projects: height * 2.95,
       contact: height * 3.85,
     };
-    let offset = typeof sectionOffsets[section] === 'number' ? sectionOffsets[section] : fallback[section];
-    // On mobile, the measured positions can be tricky; nudge contact further down so it doesn't land on Projects
-    if (isMobile && section === 'contact') {
-      // stronger nudge: push almost to the bottom of the page minus navbar
-      offset = offset + Math.round(height * 1.5) - NAVBAR_HEIGHT + 60; // tiny extra nudge
+
+    // Get target Y (section Y is relative to content top)
+    const targetY = typeof sectionOffsets[section] === 'number' ? sectionOffsets[section] : (fallback[section] ?? 0);
+
+    // Compute the desired scroll position so the section top sits just below the navbar
+    let desiredY = Math.max(0, Math.round(targetY - NAVBAR_HEIGHT));
+
+    // If we know content and view sizes, clamp to avoid overscrolling which can reveal white page backgrounds
+    if (contentHeight > 0 && scrollViewHeight > 0) {
+      const maxScroll = Math.max(0, Math.round(contentHeight - scrollViewHeight));
+      if (desiredY > maxScroll) desiredY = maxScroll;
     }
-    scrollViewRef.current?.scrollTo({ y: Math.max(0, offset), animated: true });
+
+    scrollViewRef.current?.scrollTo({ y: desiredY, animated: true });
+  };
+
+  // Update section offset only when value changes (avoid re-renders)
+  const setSectionOffsetIfChanged = (section: string, y: number) => {
+    setSectionOffsets(prev => {
+      if (typeof prev[section] === 'number' && prev[section] === y) return prev;
+      return { ...prev, [section]: y };
+    });
   };
 
   // Animate nav underline position and width when active section or measured positions change
@@ -469,12 +505,14 @@ export default function App() {
       <ScrollView
         ref={scrollViewRef}
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        onLayout={(e:any) => setScrollViewHeight(e.nativeEvent.layout.height)}
+        onContentSizeChange={(w:any, h:any) => setContentHeight(h)}
       >
   {/* Hero Section */}
-  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsets(s=> ({ ...s, hero: y })); }}>
+  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsetIfChanged('hero', y); }}>
           <View style={[styles.heroContent, isMobile && styles.heroContentMobile]}>
             <Animated.Image
               source={require('./assets/pfp2.png')}
@@ -538,7 +576,7 @@ export default function App() {
         </View>
 
   {/* About Section */}
-  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsets(s=> ({ ...s, about: y })); }}>
+  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsetIfChanged('about', y); }}>
           <View style={styles.sectionContainer}>
             <Animated.Text 
               style={[styles.sectionTitle, { opacity: aboutTitleAnim, transform: [{ scale: aboutTitleAnim }] }]}
@@ -575,7 +613,7 @@ export default function App() {
         </View>
 
   {/* Interests Section */}
-  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsets(s=> ({ ...s, interests: y })); }}>
+  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsetIfChanged('interests', y); }}>
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle} {...(Platform.OS === 'web' ? { className: 'section-title' } : {})}>My Interests</Text>
             <View style={styles.interestsGrid} {...(Platform.OS === 'web' ? { className: 'interests-grid' } : {})}>
@@ -601,7 +639,7 @@ export default function App() {
         </View>
 
   {/* Projects Section */}
-  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsets(s=> ({ ...s, projects: y })); }}>
+  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsetIfChanged('projects', y); }}>
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle} {...(Platform.OS === 'web' ? { className: 'section-title' } : {})}>Projects</Text>
             <View style={styles.projectsGrid} {...(Platform.OS === 'web' ? { className: 'projects-grid' } : {})}>
@@ -631,7 +669,7 @@ export default function App() {
         </View>
 
   {/* Contact Section */}
-  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsets(s=> ({ ...s, contact: y })); }}>
+  <View style={styles.section} onLayout={(e:any) => { const y = e.nativeEvent.layout.y; setSectionOffsetIfChanged('contact', y); }}>
           <Animated.View style={[styles.sectionContainer, { 
             opacity: contactAnim, 
             transform: [{ scale: contactAnim }] 
