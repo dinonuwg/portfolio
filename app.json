@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "D-Portfolio",
-    "slug": "D-Portfolio",
+  "name": "dinonuwg's portfolio",
+  "slug": "dinonuwg-portfolio",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
