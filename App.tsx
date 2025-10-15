@@ -231,6 +231,27 @@ export default function App() {
   }, []);
 
   const scrollToSection = (section: string) => {
+    // For web, use the DOM element position (absolute page Y) and window.scrollTo so scrolling
+    // lands exactly where the browser places the element. For native, continue using the
+    // measured section offsets and ScrollView.scrollTo.
+    if (Platform.OS === 'web') {
+      try {
+        // The contact section has the class 'section-contact' (added earlier). For other
+        // sections you could add corresponding classes and reuse this logic.
+        const sel = section === 'contact' ? '.section-contact' : `.section-${section}`;
+        const el = document.querySelector(sel) as HTMLElement | null;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const pageY = Math.round(rect.top + (window.scrollY || window.pageYOffset || 0));
+          const desiredY = Math.max(0, pageY - NAVBAR_HEIGHT);
+          window.scrollTo({ top: desiredY, behavior: 'smooth' });
+          return;
+        }
+      } catch (err) {
+        // fallthrough to native behavior if DOM measurement fails
+      }
+    }
+
     // Prefer measured offsets when available (better on mobile / dynamic content)
     const fallback: { [key: string]: number } = {
       hero: 0,
