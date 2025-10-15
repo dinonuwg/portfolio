@@ -241,14 +241,17 @@ export default function App() {
         const sel = section === 'contact' ? '.section-contact' : `.section-${section}`;
         const el = document.querySelector(sel) as HTMLElement | null;
         if (el) {
-          const rect = el.getBoundingClientRect();
-          const pageY = Math.round(rect.top + (window.scrollY || window.pageYOffset || 0));
-          const desiredY = Math.max(0, pageY - NAVBAR_HEIGHT);
+          const elRect = el.getBoundingClientRect();
           if (scrollContainer) {
-            // Scroll inside the scroll container
+            // Compute the element's offset relative to the scroll container's content
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const offsetInContainer = Math.round(elRect.top - containerRect.top + scrollContainer.scrollTop);
+            const desiredY = Math.max(0, offsetInContainer - NAVBAR_HEIGHT);
             scrollContainer.scrollTo({ top: desiredY, behavior: 'smooth' });
           } else {
             // Fallback to window scrolling
+            const pageY = Math.round(elRect.top + (window.scrollY || window.pageYOffset || 0));
+            const desiredY = Math.max(0, pageY - NAVBAR_HEIGHT);
             window.scrollTo({ top: desiredY, behavior: 'smooth' });
           }
           return;
