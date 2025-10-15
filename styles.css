@@ -1,0 +1,210 @@
+/* Hover effects for buttons */
+.cta-button {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.cta-button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(255, 255, 255, 0.2);
+}
+
+.cta-button-primary:hover {
+  background-color: #e0e0e0 !important;
+}
+
+.cta-button-secondary:hover {
+  background-color: #222 !important;
+}
+
+.project-link-button {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.project-link-button:hover {
+  transform: translateY(-3px);
+}
+
+.project-link-button:hover .project-link-text {
+  color: #ccc !important;
+}
+
+.contact-button {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.contact-button:hover {
+  background-color: #fff !important;
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(255, 255, 255, 0.2);
+}
+
+.contact-button:hover img {
+  filter: brightness(0);
+}
+
+.social-button {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.social-button:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-5px);
+}
+
+.nav-link {
+  cursor: pointer;
+}
+
+/* Remove wiggle/transform from nav links */
+.nav-link-container {
+  transition: none;
+}
+
+/* Scrollbar above navbar */
+body {
+  overflow: overlay;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  z-index: 10000;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column !important;
+    padding: 12px !important;
+  }
+
+  .logo {
+    font-size: 20px !important;
+    margin-bottom: 12px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+
+  .nav-link-container {
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+  }
+
+  .nav-link {
+    font-size: 14px !important;
+  }
+
+  .hero-title {
+    font-size: 36px !important;
+  }
+
+  .hero-subtitle {
+    font-size: 16px !important;
+    padding: 0 20px;
+  }
+
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  .cta-button {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  .section-title {
+    font-size: 32px !important;
+  }
+
+  .about-row {
+    flex-direction: column !important;
+  }
+
+  .about-image {
+    width: 200px !important;
+    height: 200px !important;
+    margin-top: 24px;
+  }
+
+  .interests-grid {
+    flex-direction: column !important;
+  }
+
+  .interest-card {
+    width: 100% !important;
+    max-width: 400px;
+  }
+
+  .projects-grid {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .project-card {
+    width: 90% !important;
+    max-width: 350px;
+  }
+
+  .contact-content {
+    flex-direction: column !important;
+    gap: 16px;
+  }
+
+  .contact-button {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  .social-links {
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 28px !important;
+  }
+
+  .hero-image {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .section-title {
+    font-size: 28px !important;
+  }
+
+  .about-text-container {
+    padding: 20px !important;
+  }
+
+  .interest-card {
+    padding: 20px !important;
+  }
+
+  .project-card {
+    width: 95% !important;
+    padding: 16px !important;
+  }
+}
